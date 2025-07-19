@@ -1,4 +1,4 @@
-# 🧠 Document Intelligence Chat Portal (Advanced RAG Module)
+# 🧠 Document Intelligence Chat Portal
 
 A full-stack AI-powered document analysis and comparison platform powered by advanced Retrieval-Augmented Generation (RAG) pipelines. Supports multi-document Q&A, reranking, side-by-side comparison, local LLMs, and full-stack deployment on AWS.
 
