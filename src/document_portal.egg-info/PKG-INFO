@@ -1,5 +1,5 @@
-Metadata-Version: 2.4
-Name: document_portal
+Metadata-Version: 2.1
+Name: document-portal
 Version: 1.0.0
 Summary: A full-stack RAG-based document intelligence platform with chat and comparison features.
 Home-page: https://github.com/bhagwat-chate/document_portal/tree/release/1.0/dev/bhagwat
@@ -10,16 +10,8 @@ Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
-Dynamic: author
-Dynamic: author-email
-Dynamic: classifier
-Dynamic: description
-Dynamic: description-content-type
-Dynamic: home-page
-Dynamic: requires-python
-Dynamic: summary
 
-# 🧠 Document Intelligence Chat Portal (Advanced RAG Module)
+# 🧠 Document Intelligence Chat Portal
 
 A full-stack AI-powered document analysis and comparison platform powered by advanced Retrieval-Augmented Generation (RAG) pipelines. Supports multi-document Q&A, reranking, side-by-side comparison, local LLMs, and full-stack deployment on AWS.
 
