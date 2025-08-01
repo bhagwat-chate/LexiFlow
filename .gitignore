@@ -5,3 +5,8 @@ src/document_portal.egg-info/PKG-INFO
 src/document_portal.egg-info/SOURCES.txt
 src/document_portal.egg-info/top_level.txt
 src/src/document_portal.egg-info/*
+src/document_analyzer/data/
+src/document_analyzer/logs/
+exception/__pycache__/
+logger/__pycache__/
+exception/logs/
