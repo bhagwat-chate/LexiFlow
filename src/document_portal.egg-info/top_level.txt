@@ -1,5 +1,0 @@
-__init__
-docanalysier
-doccompare
-multidocchat
-singledocchat
