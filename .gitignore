@@ -10,3 +10,13 @@ src/document_analyzer/logs/
 exception/__pycache__/
 logger/__pycache__/
 exception/logs/
+.env
+*.env
+*.key
+*.pem
+*.pkl
+*.sqlite3
+*.db
+secrets/*
+config/*
+token.json
