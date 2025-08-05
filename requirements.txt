@@ -9,3 +9,5 @@ pypdf
 faiss-cpu
 structlog
 pyMuPDF
+langchain-openai
+
