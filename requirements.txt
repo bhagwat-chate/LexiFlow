@@ -1,5 +1,5 @@
 langchain
-python-dotenv
+python-dotenv~=1.1.1
 ipykernel
 langchain_groq
 langchain_google_genai
@@ -7,7 +7,10 @@ langchain_groq
 langchain_community
 pypdf
 faiss-cpu
-structlog
+structlog~=25.4.0
 pyMuPDF
 langchain-openai
 
+
+pydantic~=2.11.7
+pyyaml~=6.0.2
