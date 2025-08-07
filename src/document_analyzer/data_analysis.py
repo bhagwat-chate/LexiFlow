@@ -7,7 +7,7 @@ from utils.model_loader import ModelLoader
 from model.models import Metadata
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.output_parsers import OutputFixingParser
-from prompt.prompt_library import prompt
+from prompt.prompt_library import PROMPT_REGISTRY
 
 log = CustomLogger().get_logger(__name__)
 load_dotenv()
@@ -23,7 +23,7 @@ class DocumentAnalyzer:
             self.parser = JsonOutputParser(pydantic_parser=Metadata)
             self.fixing_parser = OutputFixingParser.from_llm(parser=self.parser, llm=self.llm)
 
-            self.prompt = prompt
+            self.prompt = PROMPT_REGISTRY['document_analysis_prompt']
 
             log.info("DocumentAnalyzer initialized")
 
