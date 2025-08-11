@@ -1,16 +1,15 @@
-import os
+# src/document_compare/document_comparator.py
+
 import sys
 import pandas as pd
-from dotenv import load_dotenv
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import DocumentPortalException
-from model.models import ChangeFormat, SummaryResponse
 from prompt.prompt_library import PROMPT_REGISTRY
 from utils.model_loader import ModelLoader
+
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.output_parsers import OutputFixingParser
 
-load_dotenv()
 log = CustomLogger().get_logger(__name__)
 
 
@@ -19,18 +18,32 @@ class DocumentCompareLLM:
         try:
             self.loader = ModelLoader()
             self.llm = self.loader.load_model()
+
             self.parser = JsonOutputParser()
-            self.fixing_parser = OutputFixingParser(parser=self.parser, llm=self.llm)
-            self.prompt = PROMPT_REGISTRY['document_comparison_prompt']
-            self.chain = self.prompt | self.llm | self.parser | self.fixing_parser
+
+            self.fixing_parser = OutputFixingParser.from_llm(parser=self.parser, llm=self.llm)
+
+            self.prompt = PROMPT_REGISTRY["document_comparison_prompt"]
+
+            self.chain = self.prompt | self.llm | self.fixing_parser
 
             log.info("DocumentCompareLLM initialized with chain, parser and model")
+
         except Exception as e:
-            log.erroe(f"error in initializing DocumentCompareLLM: {str(e)}")
+            log.error(f"error in initializing DocumentCompareLLM: {str(e)}")
             raise DocumentPortalException(f"error in initializing DocumentCompareLLM: {str(e)}", sys)
 
-    def compare_documents(self):
-        pass
-
-    def _format_response(self):
-        pass
+    def compare_documents(self, combined_docs: str) -> pd.DataFrame:
+        try:
+            inputs = {
+                "combined_docs": combined_docs,
+                "format_instruction": self.parser.get_format_instructions(),
+            }
+            log.info("starting document comparison...", input_size=len(combined_docs))
+            response = self.chain.invoke(inputs)
+            df = pd.DataFrame(response)
+            log.info("Document comparison completed", rows=len(df), columns=list(df.columns))
+            return df
+        except Exception as e:
+            log.error(f"error in DocumentCompareLLM.compare_documents(): {str(e)}")
+            raise DocumentPortalException(f"error in DocumentCompareLLM.compare_documents(): {str(e)}", sys)

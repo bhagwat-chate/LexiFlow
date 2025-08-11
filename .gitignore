@@ -5,6 +5,6 @@ venv/
 __pycache__
 logs/
 *.pyc
-test.py
-data
 logs
+data/document_analysis/test_ingestion_analysis/
+data
