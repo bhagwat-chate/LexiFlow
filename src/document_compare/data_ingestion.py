@@ -2,6 +2,8 @@
 
 import sys
 import fitz
+import shutil
+from typing import Optional
 from pathlib import Path
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import DocumentPortalException
@@ -89,3 +91,32 @@ class DocumentIngestion:
         except Exception as e:
             log.error(f"error in DocumentIngestion.combine_documents(): {str(e)}")
             raise DocumentPortalException(f"error in DocumentIngestion.combine_documents(): {str(e)}", sys)
+
+    def clean_old_sessions(self, keep_latest: int = 3, sessions_subdir: Optional[str] = r"sessions") -> int:
+        """
+        Keep only `keep_latest` most recent session folders under base_dir / sessions_subdir.
+        Returns the number of deleted session directories.
+        """
+        try:
+            sessions_root = self.base_dir / (sessions_subdir or "")
+            if not sessions_root.exists() or not sessions_root.is_dir():
+                log.info("no sessions directory to clean", sessions_root=str(sessions_root))
+                return 0
+
+            # Only directories, sorted by modified time (newest first)
+            sessions = [p for p in sessions_root.iterdir() if p.is_dir()]
+            sessions.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+            to_delete = sessions[keep_latest:]
+            deleted = 0
+            for d in to_delete:
+                shutil.rmtree(d, ignore_errors=True)
+                deleted += 1
+                log.info("session deleted", path=str(d))
+
+            log.info("session cleanup complete", kept=keep_latest, deleted=deleted, root=str(sessions_root))
+            return deleted
+
+        except Exception as e:
+            log.error(f"error in clean_old_sessions: {str(e)}")
+            raise DocumentPortalException(f"error in clean_old_sessions: {str(e)}", sys)
