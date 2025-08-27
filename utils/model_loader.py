@@ -147,4 +147,4 @@ class ModelLoader:
             raise DocumentPortalException("Error loading LLM model", e)
 
     def load_llm(self):
-        log.info("LOAD LLM NOT IMPLEMENTED")
+        return self.load_model()

@@ -8,3 +8,4 @@ logs/
 logs
 data/document_analysis/test_ingestion_analysis/
 data
+faiss_index/

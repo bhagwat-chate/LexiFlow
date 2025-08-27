@@ -1,15 +1,17 @@
+# prompt/prompt_library.py
+
 import os
 import sys
 
+from collections import defaultdict
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_community.vectorstores import FAISS
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain.chains import create_history_aware_retriever
 from langchain.chains import create_retrieval_chain
-from langchain.chains import create_stuff_documents_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
 from dotenv import load_dotenv
-
 from utils.model_loader import ModelLoader
 from model.models import PromptType
 from prompt.prompt_library import PROMPT_REGISTRY
@@ -17,7 +19,7 @@ from logger.custom_logger import CustomLogger
 from exception.custom_exception import DocumentPortalException
 
 load_dotenv()
-log = CustomLogger.get_logger(__name__)
+log = CustomLogger().get_logger(__name__)
 
 
 class ConversationalRAG:
@@ -27,26 +29,54 @@ class ConversationalRAG:
             self.retriever = retriever
             self.llm = self._load_llm()
             self.contextualize_prompt = PROMPT_REGISTRY[PromptType.CONTEXTUALIZE_QUESTION.value]
-            self.qa_prompt = PROMPT_REGISTRY[PromptType.CONTEXTUALIZE_QUESTION.value]
-            self.history_aware_retriever = create_history_aware_retriever(self.llm, self.retriever, self.contextualize_prompt)
+            self.qa_prompt = PROMPT_REGISTRY[PromptType.CONTEXT_QA.value]
+
+            # 1. history-aware retriever
+            self.history_aware_retriever = create_history_aware_retriever(
+                self.llm,
+                self.retriever,
+                self.contextualize_prompt,
+            )
             log.info("created history aware retriever", session_id=self.session_id)
 
-            self.qa_chain = create_stuff_documents_chain(self.llm, self.qa_prompt)
-            self.rag_chain = create_stuff_documents_chain(self.history_aware_retriever, self.qa_chain)
+            # 2. QA chain (llm + prompt with {context})
+            self.qa_chain = create_stuff_documents_chain(
+                self.llm,
+                self.qa_prompt,
+            )
+
+            # 3. Retrieval chain (retriever + qa_chain)
+            self.rag_chain = create_retrieval_chain(
+                self.history_aware_retriever,
+                self.qa_chain,
+            )
             log.info("created RAG chain", session_id=self.session_id)
 
+            # 4. Session history store
+            self._histories = defaultdict(ChatMessageHistory)
+
+            # 5. Wrap in RunnableWithMessageHistory
             self.chain = RunnableWithMessageHistory(
                 self.rag_chain,
                 self._get_session_history,
-                input_messages_key='input',
-                history_messages_key='chat_history',
-                output_messages_key='answer'
+                input_messages_key="input",
+                history_messages_key="chat_history",
+                output_messages_key="answer",
             )
             log.info("created RunnableWithMessageHistory", session_id=self.session_id)
 
         except Exception as e:
             log.error('failed to initialize class conversationalRAG', error=str(e))
             raise DocumentPortalException('initialization error in class conversationalRAG', sys)
+
+    def _get_session_history(self, session_id: str):
+        try:
+            # return a ChatMessageHistory object for this session
+            return self._histories[session_id]
+
+        except Exception as e:
+            log.error('error in class conversationalRAG._get_session_history()', error=str(e))
+            raise DocumentPortalException('error in class conversationalRAG._get_session_history()', sys)
 
     def _load_llm(self):
         try:
@@ -58,13 +88,6 @@ class ConversationalRAG:
         except Exception as e:
             log.error('error in class conversationalRAG._load_llm()', error=str(e))
             raise DocumentPortalException('error in class conversationalRAG._load_llm()', sys)
-
-    def _get_session_history(self, session_id: str):
-        try:
-            pass
-        except Exception as e:
-            log.error('error in class conversationalRAG._get_session_history()', error=str(e))
-            raise DocumentPortalException('error in class conversationalRAG._get_session_history()', sys)
 
     def load_retriever_from_faiss(self, index_path: str):
         try:

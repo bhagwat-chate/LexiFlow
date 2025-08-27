@@ -12,7 +12,7 @@ from datetime import timezone
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import DocumentPortalException
 
-log = CustomLogger.get_logger(__name__)
+log = CustomLogger().get_logger(__name__)
 
 
 class SingleDocIngestor:
@@ -53,13 +53,13 @@ class SingleDocIngestor:
 
             log.info("PDF files loaded", count=len(documents))
 
-            return self._create_retriever(documents)
+            return self.create_retriever(documents)
 
         except Exception as e:
             log.error('error is class SingleDocIngestor.ingest_files()', error=str(e))
             raise DocumentPortalException('error in class SingleDocIngestor.ingest_files()', sys)
 
-    def _create_retriever(self, documents: List):
+    def create_retriever(self, documents: List):
         try:
             splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=300)
             chunks = splitter.split_documents(documents)
@@ -68,10 +68,10 @@ class SingleDocIngestor:
             embeddings = self.model_loader.load_embedding()
             vectorstore = FAISS.from_documents(documents=chunks, embedding=embeddings)
             vectorstore.save_local(str(self.faiss_dir))
-            log.inso("FAISS index created and saved", faiss_path=str(self.faiss_dir))
+            log.info("FAISS index created and saved", faiss_path=str(self.faiss_dir))
 
             retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
-            log.inso("retriever created successfully", faiss_path=str(self.faiss_dir))
+            log.info("retriever created successfully", faiss_path=str(self.faiss_dir))
 
             return retriever
 
