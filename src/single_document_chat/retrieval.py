@@ -20,7 +20,7 @@ load_dotenv()
 log = CustomLogger.get_logger(__name__)
 
 
-class conversationalRAG:
+class ConversationalRAG:
     def __init__(self, session_id: str, retriever):
         try:
             self.session_id = session_id

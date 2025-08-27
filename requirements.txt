@@ -11,6 +11,6 @@ structlog~=25.4.0
 pyMuPDF
 langchain-openai
 pandas
-
+langchain-core
 pydantic~=2.11.7
 pyyaml~=6.0.2
