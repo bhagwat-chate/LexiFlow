@@ -56,12 +56,25 @@ class SingleDocIngestor:
             return self._create_retriever(documents)
 
         except Exception as e:
-            log.error('failed to initialize class SingleDocIngestor.ingest_files()', error=str(e))
-            raise DocumentPortalException('initialization error in class SingleDocIngestor.ingest_files()', sys)
+            log.error('error is class SingleDocIngestor.ingest_files()', error=str(e))
+            raise DocumentPortalException('error in class SingleDocIngestor.ingest_files()', sys)
 
     def _create_retriever(self, documents: List):
         try:
-            pass
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=300)
+            chunks = splitter.split_documents(documents)
+            log.info(f"chunks created from documents. total chunks: {len(chunks)}")
+
+            embeddings = self.model_loader.load_embedding()
+            vectorstore = FAISS.from_documents(documents=chunks, embedding=embeddings)
+            vectorstore.save_local(str(self.faiss_dir))
+            log.inso("FAISS index created and saved", faiss_path=str(self.faiss_dir))
+
+            retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+            log.inso("retriever created successfully", faiss_path=str(self.faiss_dir))
+
+            return retriever
+
         except Exception as e:
-            log.error('failed to initialize class SingleDocIngestor.create_retriever()', error=str(e))
-            raise DocumentPortalException('initialization error in class SingleDocIngestor.create_retriever()', sys)
+            log.error('error in class SingleDocIngestor._create_retriever()', error=str(e))
+            raise DocumentPortalException('error in class SingleDocIngestor._create_retriever()', sys)
