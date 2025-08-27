@@ -145,3 +145,6 @@ class ModelLoader:
         except Exception as e:
             log.error(f"error in LLM load: {str(e)}")
             raise DocumentPortalException("Error loading LLM model", e)
+
+    def load_llm(self):
+        log.info("LOAD LLM NOT IMPLEMENTED")
