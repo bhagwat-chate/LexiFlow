@@ -81,9 +81,22 @@ class conversationalRAG:
             log.error('error in class conversationalRAG.load_retriever_from_faiss()', error=str(e))
             raise DocumentPortalException('error in class conversationalRAG.load_retriever_from_faiss()', sys)
 
-    def invoke(self, session_id: str):
+    def invoke(self, user_input: str) -> str:
         try:
-            pass
+            response = self.chain.invoke(
+                input={"input": user_input},
+                config={"configurable": {"session_id": self.session_id}}
+            )
+
+            answer = response.get("answer", "No answer")
+
+            if not answer:
+                log.info("Empty response received", session_id=self.session_id)
+
+            log.info("chain invoked successfully", session_id=self.session_id, user_input=user_input, answer_preview=answer[:100])
+
+            return answer
+
         except Exception as e:
             log.error('error in class conversationalRAG.invoke()', error=str(e))
             raise DocumentPortalException('error in class conversationalRAG.invoke()', sys)
