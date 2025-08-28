@@ -37,7 +37,7 @@ class ConversationalRAG:
             raise DocumentPortalException('error in class ConversationalRAG._load_llm()', sys)
 
     @staticmethod
-    def _format_document():
+    def _format_document(docs):
         try:
             pass
         except Exception as e:
