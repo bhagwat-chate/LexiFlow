@@ -8,6 +8,9 @@ from utils.model_loader import ModelLoader
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import TextLoader
 from langchain.document_loaders import Docx2txtLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import DocumentPortalException
 
@@ -81,10 +84,12 @@ class DocumentIngestor:
                 docs = loader.load()
                 documents.extend(docs)
 
-                if not documents:
-                    raise DocumentPortalException("no valid documents loaded.", sys)
+            if not documents:
+                raise DocumentPortalException("no valid documents loaded.", sys)
 
-                return self._create_retrieval(documents)
+            log.info("all documents loaded", total_docs=len(documents), session_id=str(self.session_id))
+
+            return self._create_retrieval(documents)
 
         except Exception as e:
             log.error('error in class DocumentIngestor.ingest_files()', error=str(e))
@@ -92,7 +97,20 @@ class DocumentIngestor:
 
     def _create_retrieval(self, documents):
         try:
-            pass
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=300)
+            chunks = splitter.split_documents(documents)
+            log.info("document split in to chunks", chunk_count=len(chunks))
+
+            embeddings = self.model_loader.load_embedding()
+            vector_store = FAISS.from_documents(documents=chunks, embedding=embeddings)
+            vector_store.save_local(str(self.session_faiss_dir))
+            log.info("FAISS index created and saved", faiss_path=str(self.session_faiss_dir))
+
+            retriever = vector_store.as_retriever(search_type='similarity', search_kwargs={'k': 5})
+            log.info("retriever created successfully", faiss_path=str(self.session_faiss_dir))
+
+            return retriever
+
         except Exception as e:
             log.error('error in class DocumentIngestor._create_retrieval()', error=str(e))
             raise DocumentPortalException('error in class DocumentIngestor._create_retrieval()', sys)
