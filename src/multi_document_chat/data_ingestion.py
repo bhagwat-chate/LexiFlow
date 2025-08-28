@@ -1,12 +1,16 @@
 # src/multi_document_chat/data_ingestion.py
 
 import sys
-from pathlib import Path
 import uuid
-from logger.custom_logger import CustomLogger
-from exception.custom_exception import DocumentPortalException
+from pathlib import Path
 from datetime import datetime, timezone
 from utils.model_loader import ModelLoader
+from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders import TextLoader
+from langchain.document_loaders import Docx2txtLoader
+from logger.custom_logger import CustomLogger
+from exception.custom_exception import DocumentPortalException
+
 log = CustomLogger().get_logger(__name__)
 
 
@@ -28,6 +32,8 @@ class DocumentIngestor:
             self.session_temp_dir.mkdir(parents=True, exist_ok=True)
             self.session_faiss_dir.mkdir(parents=True, exist_ok=True)
 
+            self.SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt', '.md'}
+
             self.model_loader = ModelLoader()
 
             log.info("initialized the class DocumentIngestor",
@@ -42,9 +48,44 @@ class DocumentIngestor:
             log.error('failed to initialize class DocumentIngestor', error=str(e))
             raise DocumentPortalException('initialization error in class DocumentIngestor', sys)
 
-    def ingest_files(self):
+    def ingest_files(self, uploaded_files):
         try:
-            pass
+            documents = []
+
+            for uploaded_file in uploaded_files:
+
+                ext = Path(uploaded_file.name).suffix.lower()
+
+                if ext not in self.SUPPORTED_EXTENSIONS:
+                    log.warning(f"unsupported file skipped. ", filename=uploaded_file.name)
+                    continue
+
+                file_name = f"{uuid.uuid4().hex[:8]}{ext}"
+                temp_path = self.session_temp_dir / file_name
+
+                with open(temp_path, "wb") as f:
+                    f.write(uploaded_file.read())
+
+                log.info(f'file saved for ingestion', file_name=file_name, saved_at=str(temp_path), session_id=str(self.session_id))
+
+                if ext == '.pdf':
+                    loader = PyPDFLoader(str(temp_path))
+                elif ext == '.docx':
+                    loader = Docx2txtLoader(str(temp_path))
+                elif ext == '.txt':
+                    loader = TextLoader(str(temp_path), encoding='utf-8')
+                else:
+                    log.warning(f"unsupported file type encountered. ", filename=uploaded_file.name)
+                    continue
+
+                docs = loader.load()
+                documents.extend(docs)
+
+                if not documents:
+                    raise DocumentPortalException("no valid documents loaded.", sys)
+
+                return self._create_retrieval(documents)
+
         except Exception as e:
             log.error('error in class DocumentIngestor.ingest_files()', error=str(e))
             raise DocumentPortalException('error in class DocumentIngestor.ingest_files()', sys)
