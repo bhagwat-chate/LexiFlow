@@ -7,3 +7,5 @@ logs/
 *.pyc
 logs
 faiss_index/
+req.txt
+archive
