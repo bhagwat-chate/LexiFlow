@@ -91,40 +91,101 @@
 
 # Testing code for single doc chat
 
-import os
+# import os
+# import sys
+# from pathlib import Path
+# from langchain_community.vectorstores import FAISS
+# from src.single_document_chat.data_ingestion import SingleDocIngestor
+# from src.single_document_chat.retrieval import ConversationalRAG
+# from utils.model_loader import ModelLoader
+#
+# FAISS_INDEX_PATH = Path("faiss_index")
+#
+#
+# def test_conversational_rag_with_pdf(pdf_path: str, question: str):
+#     try:
+#         model_loader = ModelLoader()
+#
+#         if FAISS_INDEX_PATH.exists():
+#             print("loading the FAISS index")
+#
+#             embeddings = model_loader.load_embedding()
+#             vector_store = FAISS.load_local(str(FAISS_INDEX_PATH), embeddings=embeddings, allow_dangerous_deserialization=True)
+#             retriever = vector_store.as_retriever(search_type='similarity', search_kwargs={'k': 5})
+#
+#         else:
+#             print("FAISS index not found. Ingesting the PDF and creating index...")
+#             with open(pdf_path, "rb") as file:
+#                 uploaded_files = [file]
+#                 ingestor = SingleDocIngestor()
+#                 retriever = ingestor.ingest_files(uploaded_files)
+#         print("running conversational RAG...")
+#         session_id = "test_rag"
+#         rag = ConversationalRAG(session_id, retriever)
+#
+#         response = rag.invoke(question)
+#         print(f"\n Question: {question}\n Answer: {response}")
+#
+#     except Exception as e:
+#         print(f"TEST FAILED: {e}")
+#         sys.exit(1)
+#
+#
+# if __name__ == "__main__":
+#     pdf_path = "E:\\LLMOps\\document_portal\\data\\single_document_chat\\NIPS-2017-attention-is-all-you-need-Paper.pdf"
+#     question = "What is the attention mechanism, explain me in 60 words?"
+#
+#     if not Path(pdf_path).exists():
+#         print(f"PDF file does not exist: {pdf_path}")
+#         sys.exit(1)
+#
+#     test_conversational_rag_with_pdf(pdf_path, question)
+
+
+# Testing for multi document chat
 import sys
 from pathlib import Path
-from langchain_community.vectorstores import FAISS
-from src.single_document_chat.data_ingestion import SingleDocIngestor
-from src.single_document_chat.retrieval import ConversationalRAG
-from utils.model_loader import ModelLoader
+from src.multi_document_chat.data_ingestion import DocumentIngestor
+from src.multi_document_chat.retriever import ConversationalRAG
 
-FAISS_INDEX_PATH = Path("faiss_index")
+import warnings
+warnings.filterwarnings('ignore')
 
 
-def test_conversational_rag_with_pdf(pdf_path: str, question: str):
+def test_multi_doc_chat():
     try:
-        model_loader = ModelLoader()
+        test_files = [
+            "data\\multi_doc_chat\\market_analysis_report.docx",
+            "data\\multi_doc_chat\\NIPS-2017-attention-is-all-you-need-Paper.pdf",
+            "data\\multi_doc_chat\\sample.pdf",
+            "data\\multi_doc_chat\\state_of_the_union.txt"
+        ]
 
-        if FAISS_INDEX_PATH.exists():
-            print("loading the FAISS index")
+        uploaded_files = []
 
-            embeddings = model_loader.load_embedding()
-            vector_store = FAISS.load_local(str(FAISS_INDEX_PATH), embeddings=embeddings, allow_dangerous_deserialization=True)
-            retriever = vector_store.as_retriever(search_type='similarity', search_kwargs={'k': 5})
+        for file_path in test_files:
+            if Path(file_path).exists():
+                uploaded_files.append(open(file_path, "rb"))
+            else:
+                print(f"file does not exists: {file_path}")
 
-        else:
-            print("FAISS index not found. Ingesting the PDF and creating index...")
-            with open(pdf_path, "rb") as file:
-                uploaded_files = [file]
-                ingestor = SingleDocIngestor()
-                retriever = ingestor.ingest_files(uploaded_files)
-        print("running conversational RAG...")
-        session_id = "test_rag"
+        if not uploaded_files:
+            print("no valid files to upload")
+            sys.exit(1)
+
+        doc_ingestor = DocumentIngestor()
+        retriever = doc_ingestor.ingest_files(uploaded_files)
+
+        for f in uploaded_files:
+            f.close()
+
+        session_id = 'test_multi_doc_chat'
         rag = ConversationalRAG(session_id, retriever)
+        question = "what is attention mechanism in research paper?"
 
-        response = rag.invoke(question)
-        print(f"\n Question: {question}\n Answer: {response}")
+        answer = rag.invoke(user_input=question)
+        print(f"\nQuestion: {question}")
+        print(f"Answer: {answer}")
 
     except Exception as e:
         print(f"TEST FAILED: {e}")
@@ -132,11 +193,4 @@ def test_conversational_rag_with_pdf(pdf_path: str, question: str):
 
 
 if __name__ == "__main__":
-    pdf_path = "E:\\LLMOps\\document_portal\\data\\single_document_chat\\NIPS-2017-attention-is-all-you-need-Paper.pdf"
-    question = "What is the attention mechanism, explain me in 60 words?"
-
-    if not Path(pdf_path).exists():
-        print(f"PDF file does not exist: {pdf_path}")
-        sys.exit(1)
-
-    test_conversational_rag_with_pdf(pdf_path, question)
+    test_multi_doc_chat()

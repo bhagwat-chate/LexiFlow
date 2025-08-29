@@ -57,8 +57,6 @@ class ConversationalRAG:
 
             log.info("FAISS retriever loaded", index_apth=index_path, session_id=self.session_id)
 
-            self._build_lcel_chain()
-
             return self.retriever
 
         except Exception as e:
@@ -69,7 +67,7 @@ class ConversationalRAG:
         try:
 
             chat_history = chat_history or []
-            payload = {"input": user_input, "chat_history": chat_history}
+            payload = {"chat_history": chat_history, "input": user_input}
 
             response = self.chain.invoke(payload)
 
@@ -134,7 +132,7 @@ class ConversationalRAG:
             self.chain = (
                     {
                         "context": retrieve_docs,
-                        "question": itemgetter("input"),
+                        "input": itemgetter("input"),
                         "chat_history": itemgetter("chat_history"),
                     }
                     | self.qa_prompt
