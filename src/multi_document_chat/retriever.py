@@ -65,9 +65,22 @@ class ConversationalRAG:
             log.error('error in class ConversationalRAG.load_retriever_from_faiss()', error=str(e))
             raise DocumentPortalException('error in class ConversationalRAG.load_retriever_from_faiss()', sys)
 
-    def invoke(self):
+    def invoke(self, user_input: str, chat_history: Optional[List[BaseMessage]] = None) -> str:
         try:
-            pass
+
+            chat_history = chat_history or []
+            payload = {"input": user_input, "chat_history": chat_history}
+
+            response = self.chain.invoke(payload)
+
+            if not response:
+                log.warning(f"no answer generated", user_input=user_input, session_id=self.session_id)
+                return "no answer generated"
+
+            log.info("chain invoked successfully", session_id=self.session_id, user_input=user_input, answer_preview=response[:100])
+
+            return response
+
         except Exception as e:
             log.error('error in class ConversationalRAG.invoke()', error=str(e))
             raise DocumentPortalException('error in class ConversationalRAG.invoke()', sys)
