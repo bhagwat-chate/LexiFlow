@@ -41,9 +41,23 @@ class ConversationalRAG:
             log.error('failed to initialize class ConversationalRAG', error=str(e))
             raise DocumentPortalException('initialization error in class ConversationalRAG', sys)
 
-    def load_retriever_from_faiss(self):
+    def load_retriever_from_faiss(self, index_path: str):
         try:
-            pass
+            embeddings = ModelLoader().load_embedding()
+
+            if not os.path.isdir(index_path):
+                raise FileNotFoundError(f"FAISS index file not found: ", {index_path})
+
+            vector_store = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
+
+            self.retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+
+            log.info("FAISS retriever loaded", index_apth=index_path, session_id=self.session_id)
+
+            self._build_lcel_chain()
+
+            return self.retriever
+
         except Exception as e:
             log.error('error in class ConversationalRAG.load_retriever_from_faiss()', error=str(e))
             raise DocumentPortalException('error in class ConversationalRAG.load_retriever_from_faiss()', sys)
