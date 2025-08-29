@@ -1,6 +1,20 @@
 # src/multi_document_chat/retriever.py
 
+import os
 import sys
+
+from typing import List, Optional
+from operator import itemgetter
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.messages import BaseMessage
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain_community.vectorstores import FAISS
+
+from utils.model_loader import ModelLoader
+from prompt.prompt_library import PROMPT_REGISTRY
+from model.models import PromptType
+
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import DocumentPortalException
 
@@ -8,9 +22,21 @@ log = CustomLogger().get_logger(__name__)
 
 
 class ConversationalRAG:
-    def __init__(self):
+    def __init__(self, session_id: str, retriever=None):
         try:
-            pass
+            self.session_id = session_id
+            self.retriever = retriever
+            self.llm = self._load_llm()
+            self.contextualize_prompt = PROMPT_REGISTRY[PromptType.CONTEXTUALIZE_QUESTION.value]
+            self.qa_prompt: ChatPromptTemplate = PROMPT_REGISTRY[PromptType.CONTEXT_QA.value]
+
+            if not retriever:
+                raise ValueError("retriever can not ba None")
+            self.retriever = retriever
+            self._build_lcel_chain()
+
+            log.info("ConversationalRAG initialized", session_id=self.session_id)
+
         except Exception as e:
             log.error('failed to initialize class ConversationalRAG', error=str(e))
             raise DocumentPortalException('initialization error in class ConversationalRAG', sys)

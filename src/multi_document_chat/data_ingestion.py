@@ -99,12 +99,12 @@ class DocumentIngestor:
         try:
             splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=300)
             chunks = splitter.split_documents(documents)
-            log.info("document split in to chunks", chunk_count=len(chunks))
+            log.info("document split in to chunks", chunk_count=len(chunks), session_id=self.session_id)
 
             embeddings = self.model_loader.load_embedding()
             vector_store = FAISS.from_documents(documents=chunks, embedding=embeddings)
             vector_store.save_local(str(self.session_faiss_dir))
-            log.info("FAISS index created and saved", faiss_path=str(self.session_faiss_dir))
+            log.info("FAISS index saved on local", faiss_path=str(self.session_faiss_dir), session_id=self.session_id)
 
             retriever = vector_store.as_retriever(search_type='similarity', search_kwargs={'k': 5})
             log.info("retriever created successfully", faiss_path=str(self.session_faiss_dir))
