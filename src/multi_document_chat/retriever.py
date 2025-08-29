@@ -10,6 +10,9 @@ from langchain_core.messages import BaseMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_community.vectorstores import FAISS
+from operator import itemgetter
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 
 from utils.model_loader import ModelLoader
 from prompt.prompt_library import PROMPT_REGISTRY
@@ -85,16 +88,51 @@ class ConversationalRAG:
             raise DocumentPortalException('error in class ConversationalRAG._load_llm()', sys)
 
     @staticmethod
-    def _format_document(docs):
+    def _format_docs(docs):
         try:
-            pass
+            return "\n\n".join(d.page_content for d in docs)
+
         except Exception as e:
             log.error('error in class ConversationalRAG._format_document()', error=str(e))
             raise DocumentPortalException('error in class ConversationalRAG._format_document()', sys)
 
     def _build_lcel_chain(self):
         try:
-            pass
+
+            # Rewrite the user question using chat history
+            question_rewriter = (
+                    {
+                        "input": itemgetter("input"),
+                        "chat_history": itemgetter("chat_history"),
+                    }
+                    | self.contextualize_prompt
+                    | self.llm
+                    | StrOutputParser()
+            )
+
+            # Retrieve docs for the rewritten question and format them
+            retrieve_docs = (
+                    question_rewriter
+                    | self.retriever
+                    | RunnableLambda(self._format_docs)
+            )
+
+            # Build the QA chain
+            self.chain = (
+                    {
+                        "context": retrieve_docs,
+                        "question": itemgetter("input"),
+                        "chat_history": itemgetter("chat_history"),
+                    }
+                    | self.qa_prompt
+                    | self.llm
+                    | StrOutputParser()
+            )
+
+            self._chain_ready = True
+
+            log.info(f"chain created", session_id=self.session_id)
+
         except Exception as e:
             log.error('error in class ConversationalRAG._build_lcel_chain()', error=str(e))
             raise DocumentPortalException('error in class ConversationalRAG._build_lcel_chain()', sys)
