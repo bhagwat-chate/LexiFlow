@@ -102,9 +102,24 @@ async def compare_documents(reference: UploadFile = File(...), actual: UploadFil
 
 
 @app.post("/chat/index")
-async def chat_build_index(reference: UploadFile = File(...)) -> Any:
+async def chat_build_index(files: List[UploadFile] = File(...),
+                           session_id: Optional[str] = Form(None),
+                           use_session_dirs: bool = Form(True),
+                           chunk_size: int = Form(1000),
+                           chunk_overlap: int = Form(200),
+                           k: int = Form(5)) -> Any:
     try:
-        pass
+        wrapped = [FastAPIFileAdapter(f) for f in files]
+        ci = ChatIngestor(
+            temp_base=UPLOAD_BASE,
+            faiss_base=FAISS_BASE,
+            use_session_dirs=use_session_dirs,
+            session_id=session_id or None
+        )
+        ci.build_retriever(wrapped, chunk_size=chunk_size, chunk_overlap=chunk_overlap, k=k)
+
+        return {"session_id": ci.session_id, "k": k, "use_session_dirs": use_session_dirs}
+
     except HTTPException:
         raise
     except Exception as e:
