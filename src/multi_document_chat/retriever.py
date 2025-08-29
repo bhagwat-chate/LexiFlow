@@ -71,7 +71,15 @@ class ConversationalRAG:
 
     def _load_llm(self):
         try:
-            pass
+            llm = ModelLoader().load_llm()
+
+            if not llm:
+                raise ValueError("LLM could not be loaded")
+
+            log.info("LLM loaded successfully", session_id=self.session_id)
+
+            return llm
+
         except Exception as e:
             log.error('error in class ConversationalRAG._load_llm()', error=str(e))
             raise DocumentPortalException('error in class ConversationalRAG._load_llm()', sys)
