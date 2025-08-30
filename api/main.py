@@ -17,6 +17,7 @@ from src.document_chat.retrieval import ConversationalRAG
 from src.document_ingestion.data_ingestion import FaissManager
 
 # BASE_DIR = Path(__file__).resolve().parent.parent
+FAISS_BASE = os.getenv("FAISS_BASE", "faiss_index")
 
 app = FastAPI(title="Document Portal API", version="0.1")
 
@@ -127,9 +128,30 @@ async def chat_build_index(files: List[UploadFile] = File(...),
 
 
 @app.post("/chat/query")
-async def chat_query(reference: UploadFile = File(...)) -> Any:
+async def chat_query(question: str = Form(...),
+                     session_id: Optional[str] = Form(None),
+                     use_session_dirs: bool = Form(True),
+                     k: int = Form(5)) -> Any:
     try:
-        pass
+        if use_session_dirs and not session_id:
+            raise HTTPException(status_code=500, detail="session_id required when use_session_dirs=True")
+
+        index_dir = os.path.join(FAISS_BASE, session_id) if use_session_dirs else FAISS_BASE
+        if not os.path.isdir(index_dir):
+            raise HTTPException(status_code=404, detail=f"FAISS index not found: {index_dir}")
+
+        rag = ConversationalRAG(session_id=session_id)
+        rag.load_retriever_from_faiss(index_path=index_dir)
+
+        response = rag.invoke(question, chat_history=[])
+
+        return {
+            'answer': response,
+            'session_id': session_id,
+            'k': k,
+            'engine': 'LCEL-RAG'
+        }
+
     except HTTPException:
         raise
     except Exception as e:
