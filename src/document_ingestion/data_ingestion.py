@@ -90,7 +90,7 @@ class FaissManager:
 
             new_docs: List[Document] = []
 
-            for d in new_docs:
+            for d in docs:
                 key = self._fingerprint(d.page_content, d.metadata or {})
 
                 if key in self._meta['rows']:
@@ -112,7 +112,11 @@ class FaissManager:
 
     def load_or_create(self):
         try:
-            pass
+            if self._exists():
+                self.vs = FAISS.load_local(str(self.index_dir), embeddings=self.emb, allow_dangerous_deserialization=True)
+
+                return self.vs
+
         except Exception as e:
             log.info(f"error in FaissManager().load_or_create()")
             raise DocumentPortalException(f"error in FaissManager().load_or_create(): {str(e)}", sys)
