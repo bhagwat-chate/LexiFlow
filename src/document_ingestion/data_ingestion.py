@@ -77,14 +77,35 @@ class FaissManager:
 
     def _save_meta(self):
         try:
-            pass
+            self.meta_path.write_text(json.dumps(self._meta, ensure_ascii=False, indent=2), encoding='utf-8')
+
         except Exception as e:
             log.info(f"error in FaissManager()._save_meta()")
             raise DocumentPortalException(f"error in FaissManager()._save_meta(): {str(e)}", sys)
 
-    def add_documents(self):
+    def add_documents(self, docs: List[Document]):
         try:
-            pass
+            if self.vs is None:
+                raise RuntimeError("call load_or_create() before add_documents_idempotent().")
+
+            new_docs: List[Document] = []
+
+            for d in new_docs:
+                key = self._fingerprint(d.page_content, d.metadata or {})
+
+                if key in self._meta['rows']:
+                    continue
+
+                self._meta['rows'][key] = True
+                new_docs.append(d)
+
+            if new_docs:
+                self.vs.add_documents(new_docs)
+                self.vs.save_local(str(self.index_dir))
+                self._save_meta()
+
+            return len(new_docs)
+
         except Exception as e:
             log.info(f"error in FaissManager().add_documents()")
             raise DocumentPortalException(f"error in FaissManager().add_documents(): {str(e)}", sys)
