@@ -18,6 +18,7 @@ from src.document_ingestion.data_ingestion import FaissManager
 
 # BASE_DIR = Path(__file__).resolve().parent.parent
 FAISS_BASE = os.getenv("FAISS_BASE", "faiss_index")
+UPLOAD_BASE = os.getenv("UPLOAD_BASE", "data")
 
 app = FastAPI(title="Document Portal API", version="0.1")
 
