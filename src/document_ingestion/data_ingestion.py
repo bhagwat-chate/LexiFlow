@@ -27,11 +27,28 @@ from exception.custom_exception import DocumentPortalException
 
 log = CustomLogger().get_logger(__name__)
 
+SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt'}
+
 
 class FaissManager:
-    def __init__(self):
+    def __init__(self, index_dir: Path, model_loader: Optional[ModelLoader] = None):
         try:
-            pass
+            self.index_dir = Path(index_dir)
+            self.index_dir.mkdir(parents=True, exist_ok=True)
+
+            self.meta_path = self.index_dir / 'ingested_meta.json'
+            self._meta: Dict[str, Any] = {"rows": {}}
+
+            if self.meta_path.exists():
+                try:
+                    self._meta = json.loads(self.meta_path.read_text(encoding='utf-8')) or {'rows': {}}
+                except Exception as e:
+                    self._meta = {"rows": {}}
+
+            self.model_loader = model_loader or ModelLoader()
+            self.emb = self.model_loader.load_embedding()
+            self.vs: Optional[FAISS] = None
+
         except Exception as e:
             log.info(f"class FaissManager initialization failed")
             raise DocumentPortalException(f"class FaissManager initialization failed: {str(e)}", sys)
@@ -82,6 +99,36 @@ class DocHandler:
             raise DocumentPortalException(f"class DocHandler initialization failed: {str(e)}", sys)
 
     def save_pdf(self):
+        """
+            Persist an uploaded PDF to the session’s storage location.
+
+            This method is responsible for taking a PDF file (previously validated and
+            provided to the handler via instance state) and writing it to disk using a
+            deterministic, collision-resistant name (e.g., a UUID or content hash).
+            It should also create any missing parent directories and record basic
+            metadata (filename, size, checksum, created_at) for downstream use.
+
+            Expected instance state
+            -----------------------
+            self.session_id : str
+                Identifier for the active session; used to resolve the output path.
+            self.input_pdf  : typing.BinaryIO | bytes | pathlib.Path
+                The PDF payload or path prepared by the caller.
+            self.base_dir   : pathlib.Path | str
+                Root directory under which session artifacts are stored, e.g.
+                ".../data/multi_doc_chat/<session_id>/".
+
+            Returns
+            -------
+            pathlib.Path
+                Absolute path to the saved PDF file on disk.
+
+            Raises
+            ------
+            DocumentPortalException
+                If the file cannot be written, the payload is missing/invalid, or any
+                unexpected error occurs while persisting the PDF.
+            """
         try:
             pass
         except Exception as e:
