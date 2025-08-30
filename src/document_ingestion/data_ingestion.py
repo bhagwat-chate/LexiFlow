@@ -53,17 +53,24 @@ class FaissManager:
             log.info(f"class FaissManager initialization failed")
             raise DocumentPortalException(f"class FaissManager initialization failed: {str(e)}", sys)
 
-    def _exists(self):
+    def _exists(self) -> bool:
         try:
-            pass
+            return (self.index_dir / 'index.faiss').exists() and (self.index_dir / 'index.pkl').exists()
         except Exception as e:
             log.info(f"error in FaissManager()._exists()")
             raise DocumentPortalException(f"error in FaissManager()._exists(): {str(e)}", sys)
 
     @staticmethod
-    def _fingerprint():
+    def _fingerprint(text: str, md: Dict[str, Any]) -> str:
         try:
-            pass
+            src = md.get('source') or md.get('file_path')
+            rid = md.get('row_id')
+
+            if src is not None:
+                return f"{src}::{'' if rid is None else rid}"
+
+            return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
         except Exception as e:
             log.info(f"error in FaissManager()._exists()")
             raise DocumentPortalException(f"error in FaissManager()._exists(): {str(e)}", sys)
