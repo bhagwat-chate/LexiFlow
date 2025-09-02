@@ -325,3 +325,4 @@ async def chat_query(question: str = Form(...),
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"query failed: {e}")
+
