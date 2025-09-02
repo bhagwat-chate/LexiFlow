@@ -9,3 +9,4 @@ logs
 faiss_index/
 req.txt
 archive
+data/

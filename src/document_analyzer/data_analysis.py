@@ -1,3 +1,5 @@
+# src/document_analyzer/data_analysis.py
+
 import os
 import sys
 from logger.custom_logger import CustomLogger
@@ -7,7 +9,7 @@ from utils.model_loader import ModelLoader
 from model.models import Metadata
 from langchain_core.output_parsers import JsonOutputParser
 from langchain.output_parsers import OutputFixingParser
-from prompt.prompt_library import PROMPT_REGISTRY
+from prompt.prompt_library import document_analysis_prompt
 
 log = CustomLogger().get_logger(__name__)
 load_dotenv()
@@ -23,7 +25,8 @@ class DocumentAnalyzer:
             self.parser = JsonOutputParser(pydantic_parser=Metadata)
             self.fixing_parser = OutputFixingParser.from_llm(parser=self.parser, llm=self.llm)
 
-            self.prompt = PROMPT_REGISTRY['document_analysis_prompt']
+            # self.prompt = PROMPT_REGISTRY['document_analysis_prompt']
+            self.prompt = document_analysis_prompt
 
             log.info("DocumentAnalyzer initialized")
 

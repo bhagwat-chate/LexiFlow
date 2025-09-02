@@ -1,10 +1,14 @@
 # src/document_compare/document_comparator.py
 
+import prompt.prompt_library as pl
+
+
 import sys
 import pandas as pd
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import DocumentPortalException
-from prompt.prompt_library import PROMPT_REGISTRY
+from prompt.prompt_library import document_comparison_prompt
+
 from utils.model_loader import ModelLoader
 
 from langchain_core.output_parsers import JsonOutputParser
@@ -23,7 +27,7 @@ class DocumentCompareLLM:
 
             self.fixing_parser = OutputFixingParser.from_llm(parser=self.parser, llm=self.llm)
 
-            self.prompt = PROMPT_REGISTRY["document_comparison_prompt"]
+            self.prompt = document_comparison_prompt
 
             self.chain = self.prompt | self.llm | self.fixing_parser
 
