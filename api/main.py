@@ -15,7 +15,7 @@ from src.document_ingestion.data_ingestion import DocHandler, DocumentComparator
 from src.document_analyzer.data_analysis import DocumentAnalyzer
 from src.document_compare.document_comparator import DocumentCompareLLM
 from src.document_chat.retrieval import ConversationalRAG
-from src.document_ingestion.data_ingestion import FaissManager
+from utils.document_ops import FastAPIFileAdapter
 
 # BASE_DIR = Path(__file__).resolve().parent.parent
 FAISS_BASE = os.getenv("FAISS_BASE", "faiss_index")
@@ -44,23 +44,11 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 async def serve_ui(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @app.get("/health")
 def health() -> Dict[str, str]:
-    return {"status": "ok", "service": "document-portal"}
+    return {"status": "ok", "service": "LexiFlow"}
 
-
-class FastAPIFileAdapter:
-    """
-    Adapt FastAPI uploads -> .name + .getbuffer() API
-    """
-
-    def __init__(self, uf: UploadFile):
-        self._uf = uf
-        self.name = uf.filename
-
-    def getbuffer(self) -> bytes:
-        self._uf.file.seek(0)
-        return self._uf.file.read()
 
 @app.post("/analyze")
 async def analyze_document(file: UploadFile = File(...)) -> Any:
