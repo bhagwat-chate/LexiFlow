@@ -1,14 +1,14 @@
 {
   "family": "lexiflowtd",
   "networkMode": "awsvpc",
-  "executionRoleArn": "arn:aws:iam::459497895986:role/ecsTaskExecutionRole",
+  "executionRoleArn": "arn:aws:iam::961341542746:user/lexiflow-ci-cd-deployer",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "1024",
   "memory": "8192",
   "containerDefinitions": [
     {
       "name": "lexiflowtd-container",
-      "image": "459497895986.dkr.ecr.ap-southeast-2.amazonaws.com/lexiflow",
+      "image": "961341542746.dkr.ecr.ap-southeast-2.amazonaws.com/lexiflow",
       "cpu": 1024,
       "essential": true,
       "portMappings": [
@@ -28,10 +28,17 @@
       ],
       "secrets": [
         {
-          "name": "API_KEYS",
-          "valueFrom": "arn:aws:secretsmanager:ap-southeast-2:459497895986:secret:api_keys-nZTtj8"
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-2:961341542746:secret:lexiflow_secrets-oyJvDE:OPENAI_API_KEY"
+        },
+        {
+          "name": "LLM_PROVIDER",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-2:961341542746:secret:lexiflow_secrets-oyJvDE:LLM_PROVIDER"
+        },
+        {
+          "name": "EMBEDDING_PROVIDER",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-2:961341542746:secret:lexiflow_secrets-oyJvDE:EMBEDDING_PROVIDER"
         }
-
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
