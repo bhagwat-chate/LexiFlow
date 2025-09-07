@@ -6,11 +6,11 @@ on:
       - completed
 env:
   AWS_REGION: ap-southeast-2
-  ECR_REPOSITORY: documentportalliveclass
-  ECS_SERVICE: document-portal-service
-  ECS_CLUSTER: document-portal-cluster
+  ECR_REPOSITORY: lexiflow
+  ECS_SERVICE: lexiflow-service
+  ECS_CLUSTER: lexiflow-cluster
   ECS_TASK_DEFINITION: .github/workflows/task_definition.json
-  CONTAINER_NAME: document-portal-container
+  CONTAINER_NAME: lexiflow-container
 
 permissions:
   id-token: write
@@ -95,4 +95,4 @@ jobs:
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
       - name: Done!
-        run: echo "Deployed to ECS Fargate Successfully"
+        run: echo "deployed to ECS Fargate successfully"
