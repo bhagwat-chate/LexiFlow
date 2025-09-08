@@ -1,7 +1,7 @@
 {
   "family": "lexiflowtd",
   "networkMode": "awsvpc",
-  "executionRoleArn": "arn:aws:iam::961341542746:user/lexiflow-ci-cd-deployer",
+  "executionRoleArn": "arn:aws:iam::961341542746:role/ecsTaskExecutionRole",
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "1024",
   "memory": "8192",
