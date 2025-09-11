@@ -5,6 +5,7 @@ import sys
 from dotenv import load_dotenv
 from utils.config_loader import load_config
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from utils.load_env_secrets import load_and_set_env_secrets
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from logger.custom_logger import CustomLogger
@@ -44,7 +45,10 @@ class ModelLoader:
         Raises:
             DocumentPortalException: If any required API keys are missing or invalid.
         """
-        self._validate_env_var()
+        # self._validate_env_var()
+        load_and_set_env_secrets(secret_name="lexiflow_secrets", region="ap-southeast-2")
+        log.info("secrets availability validation successful")
+
         self.config = load_config()
         log.info("configuration load successful", config_keys=list(self.config.keys()))
 

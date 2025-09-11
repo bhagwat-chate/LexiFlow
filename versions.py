@@ -1,4 +1,5 @@
 import importlib.metadata
+
 packages = [
     "aiohttp",
     "docx2txt",
@@ -23,7 +24,13 @@ packages = [
     "python-dotenv",
     "SQLAlchemy",
     "structlog",
-    "tiktoken"
+    "tiktoken",
+    "fastapi",
+    "uvicorn",
+    "jinja2",
+    "python-multipart",
+    "pytest",
+    "boto3"
 ]
 
 for pkg in packages:
